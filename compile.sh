@@ -19,5 +19,5 @@ if [ ! -f /opt/homebrew/bin/python3 ]; then
     brew install python3
 fi
 
-gcc-15 -shared -fPIC -fopenmp -Wall -o $build_path/libmandelbrot.so $C_path/lodepng.c $C_path/color.c $C_path/meta.c $C_path/fractalm.c
-gcc-15  -fopenmp -Wall -o $build_path/mandelbrot $C_path/main.c $C_path/lodepng.c $C_path/color.c $C_path/meta.c $C_path/fractalm.c
+gcc-15 -shared -fPIC -fopenmp -lm -Wall -o $build_path/libmandelbrot.so $C_path/lodepng.c $C_path/color.c $C_path/meta.c $C_path/fractalm.c
+gcc-15  -fopenmp -lm -Wall -o $build_path/mandelbrot $C_path/main.c $C_path/lodepng.c $C_path/color.c $C_path/meta.c $C_path/fractalm.c
