@@ -71,8 +71,10 @@ def get_mandelbrot(config, res):
 def get_default_config():
     import os
     cwd = os.getcwd()
-    
-    lib = CDLL(f'{cwd}/build/libmandelbrot.so')
+    try: 
+        lib = CDLL(f'{cwd}/build/libmandelbrot.so')
+    except:
+        raise Exception("Failed to load libmandelbrot.so")
     lib.get_default_config.restype = Config
     cfg = lib.get_default_config()
     return cfg
