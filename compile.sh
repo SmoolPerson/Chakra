@@ -10,8 +10,8 @@ fi
 eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv 2>/dev/null)"
 
 # check if gcc is installed
-if [ ! -f /opt/homebrew/bin/gcc-15 ] || [ ! -f /usr/local/bin/gcc-15 ]; then
-    brew install gcc
+if [ ! -f /opt/homebrew/bin/gcc-15 ] && [ ! -f /usr/local/bin/gcc-15 ]; then
+    brew install gcc@15
 fi
 
 # Check if homebrew python3 is installed
