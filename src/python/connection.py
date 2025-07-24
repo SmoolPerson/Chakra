@@ -69,7 +69,10 @@ def get_mandelbrot(config, res):
     print(f"Bounds: {config.width_min}, {config.width_max}, {config.height_min}, {config.height_max}")
     
 def get_default_config():
-    lib = CDLL('./build/libmandelbrot.so')
+    import os
+    cwd = os.getcwd()
+    
+    lib = CDLL(f'{cwd}/build/libmandelbrot.so')
     lib.get_default_config.restype = Config
     cfg = lib.get_default_config()
     return cfg
