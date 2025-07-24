@@ -19,5 +19,5 @@ if ! dpkg -s python3-venv &> /dev/null; then
     sudo apt install python3-venv -y
 fi
 
-gcc -shared -fPIC -fopenmp -lm -Wall -o $build_path/libmandelbrot.so $C_path/lodepng.c $C_path/color.c $C_path/meta.c $C_path/fractalm.c
-gcc  -fopenmp -lm -Wall -o $build_path/mandelbrot $C_path/main.c $C_path/lodepng.c $C_path/color.c $C_path/meta.c $C_path/fractalm.c
+gcc -shared -fPIC -fopenmp -Wall -o $build_path/libmandelbrot.so $C_path/lodepng.c $C_path/color.c $C_path/meta.c $C_path/fractalm.c -lm
+gcc  -fopenmp -Wall -o $build_path/mandelbrot $C_path/main.c $C_path/lodepng.c $C_path/color.c $C_path/meta.c $C_path/fractalm.c -lm
