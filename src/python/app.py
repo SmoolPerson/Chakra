@@ -106,6 +106,7 @@ def generate_mandelbrot(context, do_in_thread=True):
         return res[0]
 
 def main_loop():
+    print("Press ctrl + c to quit")
     context = Context()
 
     while context.running:
