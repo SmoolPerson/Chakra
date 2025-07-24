@@ -2,30 +2,20 @@
 build_path=$(readlink -f ./build)
 C_path=$(readlink -f ./src/C)
 
-just_updated=false
+sudo apt update
+
 # check if gcc is installed
 if ! command -v gcc &> /dev/null; then
-    if [ "$just_updated" = false ]; then
-        sudo apt update
-        just_updated=true
-    fi
     sudo apt install gcc -y
 fi
 
 # check if python3 is installed
 if ! command -v python3 &> /dev/null; then
-    if [ "$just_updated" = false ]; then
-        sudo apt update
-        just_updated=true
-    fi
     sudo apt install python3 -y
 fi
 
 # check if python3-venv is installed
 if ! dpkg -s python3-venv &> /dev/null; then
-    if [ "$just_updated" = false ]; then
-        sudo apt update
-    fi
     sudo apt install python3-venv -y
 fi
 
