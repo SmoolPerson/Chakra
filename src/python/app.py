@@ -29,12 +29,15 @@ class Context:
     res: list
     surf: pygame.Surface
     screen: pygame.Surface
+    screen_height: int
     def __init__(self):
         self.box = Box(0,0,0,0)
         pygame.init()
-        self.SCREEN_DIM = 512
+        self.SCREEN_DIM = 1024
+        # Scale down a little so it doesn't take up the entire screen including the doc bar
+        self.screen_height = pygame.display.Info().current_h * 0.7
         self.bounds = Bounds(-2,2,-2,2)
-        self.screen = pygame.display.set_mode((self.SCREEN_DIM, self.SCREEN_DIM))
+        self.screen = pygame.display.set_mode((self.screen_height, self.screen_height))
         self.running = True
         self.generating = False
         self.clock = pygame.time.Clock()
@@ -57,8 +60,8 @@ def update_screen_dim(context: Context):
     bounds = context.bounds
     lowest_x, highest_x = sorted((box.firstx, box.secondx))
     # subtract by SCREEN_DIM since y is opposite between pygame and math
-    invert_firsty = context.SCREEN_DIM - box.firsty
-    invert_secondy = context.SCREEN_DIM - box.secondy
+    invert_firsty = context.screen_height - box.firsty
+    invert_secondy = context.screen_height - box.secondy
     # Since subtracting changes which one is the lowest
     lowest_y, highest_y = sorted((invert_firsty, invert_secondy))
     mandelbrot_width = bounds.width_max - bounds.width_min
@@ -68,10 +71,10 @@ def update_screen_dim(context: Context):
     # then multiply it by the real width to bring it into mandelbrot space, and add width_min to offset it to the screen
     # similar logic for ones that follow
     new_bounds = Bounds(0,0,0,0)
-    new_bounds.width_min = bounds.width_min + (lowest_x/context.SCREEN_DIM * mandelbrot_width)
-    new_bounds.width_max = bounds.width_min + (highest_x/context.SCREEN_DIM * mandelbrot_width)
-    new_bounds.height_min = bounds.height_min + (lowest_y/context.SCREEN_DIM * mandelbrot_height)
-    new_bounds.height_max = bounds.height_min + (highest_y/context.SCREEN_DIM * mandelbrot_height)
+    new_bounds.width_min = bounds.width_min + (lowest_x/context.screen_height * mandelbrot_width)
+    new_bounds.width_max = bounds.width_min + (highest_x/context.screen_height * mandelbrot_width)
+    new_bounds.height_min = bounds.height_min + (lowest_y/context.screen_height * mandelbrot_height)
+    new_bounds.height_max = bounds.height_min + (highest_y/context.screen_height * mandelbrot_height)
     
     new_bounds.width_min, new_bounds.width_max = sorted((new_bounds.width_min, new_bounds.width_max))
     new_bounds.height_min, new_bounds.height_max = sorted((new_bounds.height_min, new_bounds.height_max))
@@ -90,10 +93,10 @@ def generate_mandelbrot(context, do_in_thread=True):
     config.HEIGHT = context.SCREEN_DIM
 
     # TODO: Make a config.json file to store these values instead of hardcoding them
-    config.MAX_ITER = 600
+    config.MAX_ITER = 300
     config.ANTI_ALIASING = 1
     config.ANTI_ALIASING_NUM_PTS = 6
-    config.COLOR_STEP_MULTIPLIER = 0.3
+    config.COLOR_STEP_MULTIPLIER = 0.1
     config.COLOR_OFFSET = 240
     config.ITERATION_CHECK = 0
     
@@ -111,6 +114,7 @@ def main_loop():
 
     while context.running:
         context.screen.fill((0,0,0))
+        context.surf = pygame.transform.scale(context.surf, (context.screen_height, context.screen_height))
         context.screen.blit(context.surf, (0,0))
         # If the thread has ended, then get the surface
         if context.res:
