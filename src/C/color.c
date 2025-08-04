@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include "cfstruct.h"
-#include "fractalm.h"
+#include "fractalmath.h"
 #include <omp.h>
 
 // color a hue based on how many iterations it took

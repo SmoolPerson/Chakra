@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "lodepng.h"
 #include "cfstruct.h"
-#include "fractalm.h"
+#include "fractalmath.h"
 #include "meta.h"
 #include "color.h"
 

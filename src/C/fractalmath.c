@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include "cfstruct.h"
-#include "fractalm.h"
+#include "fractalmath.h"
 
 // File for things that are related to math
 
