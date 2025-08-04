@@ -93,7 +93,7 @@ def generate_mandelbrot(context, do_in_thread=True):
     config.HEIGHT = context.SCREEN_DIM
 
     # TODO: Make a config.json file to store these values instead of hardcoding them
-    config.MAX_ITER = 300
+    config.MAX_ITER = 600
     config.ANTI_ALIASING = 1
     config.ANTI_ALIASING_NUM_PTS = 6
     config.COLOR_STEP_MULTIPLIER = 0.1

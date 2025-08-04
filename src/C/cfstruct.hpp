@@ -1,26 +1,23 @@
-#include <stdbool.h>
-#include <stdint.h>
+#include <iostream>
 
 #ifndef STRUCT_H
 #define STRUCT_H
 
 typedef struct {
     bool ANTI_ALIASING;
-    int ANTI_ALIASING_NUM_PTS;
+    unsigned int ANTI_ALIASING_NUM_PTS;
     double COLOR_STEP_MULTIPLIER;
     int COLOR_OFFSET;
-    double SATURATION;
-    double BRIGHTNESS;
-    char *OUTPUT_FILENAME;
-    int MAX_ITER;
+    const char *OUTPUT_FILENAME;
+    unsigned int MAX_ITER;
     int CUTOFF;
     double width_min;
     double width_max;
     double height_min;
     double height_max;
-    int WIDTH;
-    int HEIGHT;
-    int ITERATION_CHECK;
+    unsigned int WIDTH;
+    unsigned int HEIGHT;
+    bool ITERATION_CHECK;
 } Config;
 
 typedef struct {

@@ -1,8 +1,6 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <math.h>
-#include "cfstruct.h"
-#include "fractalmath.h"
+#include <cmath>
+#include "cfstruct.hpp"
+#include "fractalmath.hpp"
 
 // File for things that are related to math
 
@@ -40,7 +38,7 @@ double mandelbrot(double cx, double cy, Config *config) {
     double dest;
     for (size_t i = 1; i < config->MAX_ITER; ++i) {
         // This is bounds check; if the distance of x and y from origin is > 32, then point escaped
-        if (zx2 + zy2 > 1024) {
+        if (zx2 + zy2 > config->CUTOFF) {
             magnitude = sqrt(zx2 + zy2);
             magnitude_d = sqrt(dx * dx + dy * dy);
             // return the negative log of the distance estimation instead of the iteration count

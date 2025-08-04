@@ -1,10 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <stdbool.h>
-#include <time.h>
-#include "cfstruct.h"
-#include "fractalmath.h"
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include "cfstruct.hpp"
+#include "fractalmath.hpp"
 #include <omp.h>
 
 // color a hue based on how many iterations it took
@@ -68,12 +66,14 @@ void get_and_set_pixel_color(int imagex, int imagey, unsigned char *rgb_data, Co
 }
 
 // This is useful for the python renderer, having a generate_mandelbrot to just write to a pixel buffer, and makes the code in main neater overall.
-unsigned char *generate_mandelbrot(Config *config, bool logging) {
+// Extern "C" makes it callable from C code, like Python's ctypes
+extern "C" {unsigned char *generate_mandelbrot(Config *config, bool logging) {
     double mandelbrot_width = config->width_max - config->width_min;
     double mandelbrot_height = config->height_max - config->height_min;
     double screen_ratio = (double)config->WIDTH/(double)config->HEIGHT;
     double mandelbrot_ratio = mandelbrot_width / mandelbrot_height;
     if (fabs(screen_ratio - mandelbrot_ratio) > 1e-3) {
+        fprintf(stderr, "%u %u\n", config->WIDTH, config->HEIGHT);
         fprintf(stderr, "WARNING: WIDTH and HEIGHT should be the same aspect ratio as the borders of the mandelbrot image or unexpected results can occur!\n");
         fprintf(stderr, "Floating point precision errors can also cause this.\n");
     }
@@ -82,7 +82,7 @@ unsigned char *generate_mandelbrot(Config *config, bool logging) {
     srand(time(NULL));
 
     // it is an unsigned char since rgb data is one byte array with digits 0-255, and we multiply by 4 for the rgba values
-    unsigned char *rgb_data = malloc(config->WIDTH * config->HEIGHT * 3);
+    unsigned char *rgb_data = (unsigned char *) malloc(config->WIDTH * config->HEIGHT * 3);
     if (!rgb_data) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
@@ -106,8 +106,10 @@ unsigned char *generate_mandelbrot(Config *config, bool logging) {
         }
     }
     return rgb_data;
-}
+}}
 
+// Helper function to free the buffer allocated by generate_mandelbrot via python
+extern "C" {
 void free_buf(unsigned char *buf) {
     free(buf);
-}
+}}

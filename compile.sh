@@ -19,5 +19,5 @@ if ! brew list python >/dev/null 2>&1; then
     brew install python
 fi
 
-gcc-15 -shared -fPIC -fopenmp -Wall -o "$build_path/libmandelbrot.so" "$C_path/lodepng.c" "$C_path/color.c" "$C_path/meta.c" "$C_path/fractalmath.c" -lm
-gcc-15  -fopenmp -Wall -o "$build_path/mandelbrot" "$C_path/main.c" "$C_path/lodepng.c" "$C_path/color.c" "$C_path/meta.c" "$C_path/fractalmath.c" -lm
+/opt/homebrew/bin/g++-15 -shared -fPIC -fopenmp -Wall -o "$build_path/libmandelbrot.so" "$C_path/lodepng.c" "$C_path/color.cpp" "$C_path/meta.cpp" "$C_path/fractalmath.cpp" -lm
+/opt/homebrew/bin/g++-15  -fopenmp -Wall -o "$build_path/mandelbrot" "$C_path/main.cpp" "$C_path/lodepng.c" "$C_path/color.cpp" "$C_path/meta.cpp" "$C_path/fractalmath.cpp" -lm

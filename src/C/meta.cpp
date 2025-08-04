@@ -1,8 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "cfstruct.h"
-#include <string.h>
-#include "meta.h"
+#include "cfstruct.hpp"
+#include <cstring>
+#include "meta.hpp"
 
 // Meta stuff like config and parsing args
 void print_help() {
@@ -75,25 +73,23 @@ void parse_args(int argc, char *argv[], Config *config) {
     }
 }
 
-
-Config get_default_config() {
+// Extern "C" makes it callable from C code, like Python's ctypes
+extern "C" {Config get_default_config() {
     Config config = {
         .ANTI_ALIASING = true,
         .ANTI_ALIASING_NUM_PTS = 12,
         .COLOR_STEP_MULTIPLIER = 10,
         .COLOR_OFFSET = 240,
-        .SATURATION = 100,
-        .BRIGHTNESS = 85,
         .OUTPUT_FILENAME = "mandelbrot.png",
         .MAX_ITER = 300,
-        .CUTOFF = 2,
+        .CUTOFF = 1024,
         .width_min = -2,
         .width_max = 2,
         .height_min = -2,
         .height_max = 2,
         .WIDTH = 256,
         .HEIGHT = 256,
-        .ITERATION_CHECK = 1
+        .ITERATION_CHECK = false
     };
     return config;
-}
+} }

@@ -1,4 +1,4 @@
-from ctypes import Structure, c_int, c_bool, c_double, c_char_p, CDLL, POINTER, c_ubyte, cast
+from ctypes import Structure, c_int, c_bool, c_double, c_char_p, CDLL, POINTER, c_ubyte, cast, c_uint
 import numpy as np;
 import pygame
 import time
@@ -6,21 +6,19 @@ import time
 class Config(Structure):
     _fields_ = [
         ("ANTI_ALIASING", c_bool),
-        ("ANTI_ALIASING_NUM_PTS", c_int),
+        ("ANTI_ALIASING_NUM_PTS", c_uint),
         ("COLOR_STEP_MULTIPLIER", c_double),
         ("COLOR_OFFSET", c_int),
-        ("SATURATION", c_double),
-        ("BRIGHTNESS", c_double),
         ("OUTPUT_FILENAME", c_char_p),
-        ("MAX_ITER", c_int),
+        ("MAX_ITER", c_uint),
         ("CUTOFF", c_int),
         ("width_min", c_double),
         ("width_max", c_double),
         ("height_min", c_double),
         ("height_max", c_double),
-        ("WIDTH", c_int),
-        ("HEIGHT", c_int),
-        ("ITERATION_CHECK", c_int)
+        ("WIDTH", c_uint),
+        ("HEIGHT", c_uint),
+        ("ITERATION_CHECK", c_bool)
     ]
 def get_mandelbrot(config, res):
     # load mandelbrot compiled lib

@@ -1,4 +1,4 @@
-#include "cfstruct.h"
+#include "cfstruct.hpp"
 
 #ifndef FRACTALM_H
 #define FRACTALM_H

@@ -1,12 +1,9 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <stdbool.h>
+#include <iostream>
 #include "lodepng.h"
-#include "cfstruct.h"
-#include "fractalmath.h"
-#include "meta.h"
-#include "color.h"
+#include "cfstruct.hpp"
+#include "fractalmath.hpp"
+#include "meta.hpp"
+#include "color.hpp"
 
 // Main entry point, check all the other included header files for all the helper functions I use in this
 int main(int argc, char *argv[]) {
@@ -19,7 +16,9 @@ int main(int argc, char *argv[]) {
     puts("\n");
 
     unsigned error = lodepng_encode24_file(config.OUTPUT_FILENAME, rgb_data, config.WIDTH, config.HEIGHT);
-    if (error) printf("PNG encode error %u: %s\n", error, lodepng_error_text(error));
+    if (error) {
+        printf("PNG encode error %u: %s\n", error, lodepng_error_text(error));
+    }
 
     free(rgb_data);
     return 0;
