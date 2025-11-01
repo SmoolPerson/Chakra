@@ -11,14 +11,13 @@ void print_help() {
     printf("  --width-max <float>     Right boundary (default: 0.5)\n");
     printf("  --height-min <float>    Bottom boundary (default: -1.0)\n");
     printf("  --height-max <float>    Top boundary (default: 1.0)\n");
-    printf("  --pixels <int>          Pixels per unit (default: 4096)\n");
     printf("  --iterations <int>      Max iterations (default: 675)\n");
     printf("  --output <filename>     Output filename (default: mandelbrot.png)\n");
-    printf("  --anti-aliasing <0|1>   Enable anti-aliasing (default: false)\n");
     printf("  --aa-points <int>       Anti-aliasing sample points (default: 12)\n");
     printf("  --color-mult <float>    Color step multiplier (default: 0.5)\n");
     printf("  --color-offset <int>    Color offset (default: 240)\n");
     printf("  --width <int>           Image width in pixels (default: 256)\n");
+    printf("  --gpu <bool>            Whether to use the GPU to render the image (default: false)\n");
     printf("  --height <int>          Image height in pixels (default: 256)\n");
     printf("  --help, -h              Show this help message\n");
     exit(0);
@@ -47,9 +46,6 @@ void parse_args(int argc, char *argv[], Config *config) {
         else if (strcmp(argv[i], "--output") == 0 && i + 1 < argc) {
             config->OUTPUT_FILENAME = argv[++i];
         }
-        else if (strcmp(argv[i], "--anti-aliasing") == 0 && i + 1 < argc) {
-            config->ANTI_ALIASING = atoi(argv[++i]);
-        }
         else if (strcmp(argv[i], "--aa-points") == 0 && i + 1 < argc) {
             config->ANTI_ALIASING_NUM_PTS = atoi(argv[++i]);
         }
@@ -65,6 +61,15 @@ void parse_args(int argc, char *argv[], Config *config) {
         else if (strcmp(argv[i], "--height") == 0 && i + 1 < argc) {
             config->HEIGHT = atoi(argv[++i]);
         }
+        else if (strcmp(argv[i], "--gpu") == 0 && i + 1 < argc) {
+            std::string gpu_arg = argv[++i];
+            if (gpu_arg == "true" || gpu_arg == "1") {
+                config->GPU = true;
+            } 
+            else {
+                config->GPU = false;
+            }
+        }
         else {
             fprintf(stderr, "Unknown option: %s\n", argv[i]);
             fprintf(stderr, "Use --help for usage information\n");
@@ -76,7 +81,6 @@ void parse_args(int argc, char *argv[], Config *config) {
 // Extern "C" makes it callable from C code, like Python's ctypes
 extern "C" {Config get_default_config() {
     Config config = {
-        .ANTI_ALIASING = true,
         .ANTI_ALIASING_NUM_PTS = 12,
         .COLOR_STEP_MULTIPLIER = 10,
         .COLOR_OFFSET = 240,
@@ -89,7 +93,8 @@ extern "C" {Config get_default_config() {
         .height_max = 2,
         .WIDTH = 256,
         .HEIGHT = 256,
-        .ITERATION_CHECK = false
+        .ITERATION_CHECK = false,
+        .GPU = false
     };
     return config;
 } }

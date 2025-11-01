@@ -1,10 +1,7 @@
-#include <iostream>
-
 #ifndef STRUCT_H
 #define STRUCT_H
 
 typedef struct {
-    bool ANTI_ALIASING;
     unsigned int ANTI_ALIASING_NUM_PTS;
     double COLOR_STEP_MULTIPLIER;
     int COLOR_OFFSET;
@@ -18,6 +15,7 @@ typedef struct {
     unsigned int WIDTH;
     unsigned int HEIGHT;
     bool ITERATION_CHECK;
+    bool GPU;
 } Config;
 
 typedef struct {

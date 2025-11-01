@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include "cfstruct.hpp"
 #include "fractalmath.hpp"
-#include <omp.h>
 
 // color a hue based on how many iterations it took
 rgb_type calculate_hue(double mandelbrot_val, Config *config) {
@@ -11,11 +10,13 @@ rgb_type calculate_hue(double mandelbrot_val, Config *config) {
     // using sine so it wrap smoothly between 0 and 1
     double hue_val = 0.5 * (sin((mandelbrot_val)*config->COLOR_STEP_MULTIPLIER + config->COLOR_OFFSET)+1);
     // Hoping to make this a setting soon instead of hardcoding it
-    rgb_type grad[3] = {
-    {31,95,222},
-    {218, 227, 45},
-    {237, 0, 0}
-    };
+    rgb_type grad[5] = {
+{0, 32, 128},   // deep blue
+{32, 107, 203}, // bright blue
+{237, 255, 255},// white/cyan highlight
+{255, 170, 0},  // orange
+{128, 0, 128}   // deep purple instead of black
+};
     int len = (int)(sizeof(grad)/sizeof(grad[0]));
     rgb = get_gradient(hue_val, grad, len);
     return rgb;
@@ -27,30 +28,24 @@ void get_and_set_pixel_color(int imagex, int imagey, unsigned char *rgb_data, Co
     // Where should we write the rgb color inside the buffer
     int rgb_write_index = (imagey * config->WIDTH + imagex) * 3;
 
-    // PIXELS_PER_SQUARE * step = 1.0; step = 1.0/PIXELS_PER_SQUARE
     double step = (config->width_max - config->width_min)/config->WIDTH;
 
     double cx = config->width_min + imagex * step;
     double cy = config->height_min + imagey * step;
 
     double mandelbrot_val;
-    if (config->ANTI_ALIASING) {
-        // The implementation here is to select some values at a random offset, and avg them
-        double anti_aliasing_sum = 0.0;
-        for (size_t i = 0; i < config->ANTI_ALIASING_NUM_PTS; ++i) {
-            // Divide by randmax to normalize, and multiply by step
-            double rand_x_offset = ((double)rand()/(double)RAND_MAX) * step;
-            double rand_y_offset = ((double)rand()/(double)RAND_MAX) * step;
-            double randomized_cx = cx + rand_x_offset;
-            double randomized_cy = cy + rand_y_offset;
-            anti_aliasing_sum += mandelbrot(randomized_cx, randomized_cy, config);
-        }
-        mandelbrot_val = anti_aliasing_sum/config->ANTI_ALIASING_NUM_PTS;
+    // We do some anti-aliasing here, so we can get a smoother image
+    // The implementation here is to select some values at a random offset, and avg them
+    double anti_aliasing_sum = 0.0;
+    for (size_t i = 0; i < config->ANTI_ALIASING_NUM_PTS; ++i) {
+        // Divide by randmax to normalize, and multiply by step
+        double rand_x_offset = ((double)rand()/(double)RAND_MAX) * step;
+        double rand_y_offset = ((double)rand()/(double)RAND_MAX) * step;
+        double randomized_cx = cx + rand_x_offset;
+        double randomized_cy = cy + rand_y_offset;
+        anti_aliasing_sum += mandelbrot(randomized_cx, randomized_cy, config);
     }
-    else {
-        // Fallback if anti aliasing is disabled is to compute only 1 value per pixel
-        mandelbrot_val = mandelbrot(cx, cy, config);
-    }
+    mandelbrot_val = anti_aliasing_sum/config->ANTI_ALIASING_NUM_PTS;
     // If mandelbrot is part of set, color black, else, color a hue based on how many iterations it took
     if (mandelbrot_val == 0) {
         rgb_data[rgb_write_index] = 0;
@@ -89,8 +84,6 @@ extern "C" {unsigned char *generate_mandelbrot(Config *config, bool logging) {
     }
     int percent = 0;
     int past_percent = -1;
-    omp_set_num_threads(4);
-    #pragma omp parallel for schedule(dynamic)
     for (size_t y = 0; y < config->HEIGHT; ++y) {
         // formula to convert to percent is a/b * 100
         percent = (y*100/config->HEIGHT);

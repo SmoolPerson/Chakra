@@ -1,7 +1,7 @@
 #!/bin/bash
 build_path=$(readlink -f ./build)
 C_path=$(readlink -f ./src/C)
-
+METAL_path=$(readlink -f ./src/metal)
 #check if brew is installed
 if ! command -v brew >/dev/null 2>&1; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -19,5 +19,5 @@ if ! brew list python >/dev/null 2>&1; then
     brew install python
 fi
 
-/opt/homebrew/bin/g++-15 -shared -fPIC -fopenmp -Wall -o "$build_path/libmandelbrot.so" "$C_path/lodepng.c" "$C_path/color.cpp" "$C_path/meta.cpp" "$C_path/fractalmath.cpp" -lm
-/opt/homebrew/bin/g++-15  -fopenmp -Wall -o "$build_path/mandelbrot" "$C_path/main.cpp" "$C_path/lodepng.c" "$C_path/color.cpp" "$C_path/meta.cpp" "$C_path/fractalmath.cpp" -lm
+clang++ -x objective-c++ -shared -fPIC -Wall -o "$build_path/libmandelbrot.so" "$C_path/lodepng.c" "$C_path/color.cpp" "$C_path/meta.cpp" "$C_path/fractalmath.cpp" "$METAL_path/gpu_bridge.mm" -lm -fobjc-arc -framework Metal -framework Foundation -framework AppKit -framework MetalKit
+clang++ -x objective-c++ -Wall -o "$build_path/mandelbrot" "$C_path/main.cpp" "$C_path/lodepng.c" "$C_path/color.cpp" "$C_path/meta.cpp" "$C_path/fractalmath.cpp" "$METAL_path/gpu_bridge.mm" -lm -fobjc-arc -framework Metal -framework Foundation -framework AppKit -framework MetalKit
