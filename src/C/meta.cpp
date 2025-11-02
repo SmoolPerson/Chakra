@@ -1,5 +1,8 @@
 #include "cfstruct.hpp"
 #include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
 #include "meta.hpp"
 
 // Meta stuff like config and parsing args

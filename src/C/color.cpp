@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <chrono>
 #include "cfstruct.hpp"
 #include "fractalmath.hpp"
 
