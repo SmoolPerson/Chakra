@@ -28,20 +28,11 @@ float3 get_gradient(float value, constant float3 *gradient, int len) {
 	return color;
 }
 
-float random(float x, float seed) {
-    float res = fract(sin((x + seed) * 12.9898) * 43758.5453); // noise function https://thebookofshaders.com/10/
-    return res;
-}
-
 float mandelbrot_point(float cx, float cy) {
     float zx = 0;
     float zy = 0;
-    float new_zx = 0; // Temp vars to make sure we dont rewrite stuff
-    float new_zy = 0;
 
-    // calculating squared versions ahead of time so that we don't need to calculate them twice
-    float zx2 = 0;
-    float zy2 = 0;
+    float new_zy = 0; // Temp vars to make sure we dont rewrite stuff
 
     // Bulb checking: https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Cardioid_/_bulb_checking
     float cx14 = cx - 0.25;
@@ -56,8 +47,8 @@ float mandelbrot_point(float cx, float cy) {
     float magnitude;
     for (size_t i = 1; i < 300; ++i) {
         // This is bounds check; if the distance of x and y from origin is > 32, then point escaped
-        if (zx2 + zy2 > 1024) {
-            magnitude = sqrt(zx2 + zy2);
+        if (zx*zx + zy*zy > 1024) {
+            magnitude = sqrt(zx*zx + zy*zy);
             // http://www.imajeenyus.com/mathematics/20121112_distance_estimates/distance_estimation_method_for_fractals.pdf
             //dest = (magnitude / magnitude_d) * log(magnitude);
             float value_to_color = i - log(log(magnitude))/log(2.0f); // Smooth coloring
@@ -65,12 +56,8 @@ float mandelbrot_point(float cx, float cy) {
         }
         // Instead of using a single complex object, we split it up into two real equations for slight optimization
         new_zy = (zx + zx) * zy + cy; // add zx to itself for a speedup
-        new_zx = zx2 - zy2 + cx;
-
-        zx = new_zx;
+        zx = zx*zx - zy*zy + cx;
         zy = new_zy;
-        zx2 = zx * zx;
-        zy2 = zy * zy;
     }
     // if point does not escape, then its in the set, so return 0
     return 0;
@@ -80,14 +67,13 @@ kernel void mandelbrot(device unsigned char *outBuffer [[ buffer(0) ]], const de
     // anti aliasing code
     float total_mandel_value = 0;
     for (int k = 0; k < aa_num_pts[0]; ++k) {
-        float offset_x = random(k, index); // seed it with the index so that it is random
-        float offset_y = random(k + aa_num_pts[0], index); // offset it by the max so it is a completely different set of randoms
-        // scale it down by the step so we don't get points too far away
-        offset_x *= step[0];
-        offset_y *= step[0];
-        total_mandel_value += mandelbrot_point(inBuffer[index].x + offset_x, inBuffer[index].y + offset_y);
+        for (int j = 0; j < aa_num_pts[0]; ++j) {
+            float offset_x = step[0] * k * 1/aa_num_pts[0];
+            float offset_y = step[0] * j * 1/aa_num_pts[0]; // scale it down by the step so we don't get points too far away
+            total_mandel_value += mandelbrot_point(inBuffer[index].x + offset_x, inBuffer[index].y + offset_y);
+        }
     }
-    float average = total_mandel_value / aa_num_pts[0];
+    float average = total_mandel_value / (aa_num_pts[0] * aa_num_pts[0]);
     if (abs(average) > 1e-2) {
         float3 color = get_gradient(average, colors_to_interpolate, 5);
         outBuffer[index * 3] = color.x;

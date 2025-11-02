@@ -47,14 +47,13 @@ def get_mandelbrot(config, res):
 
     start_time = time.time()
     ptr = None
-    print(cfg.GPU)
     if not cfg.GPU:
         ptr = lib.generate_mandelbrot(cfg, False)
     else:
         ptr = lib.fill_rgb_gpu(cfg, False)
     width = cfg.WIDTH
     height = cfg.HEIGHT
-
+    end_time = time.time()
     # Multiply by three since there are three channels in the output
     buffer_size = width * height * 3
 
@@ -77,9 +76,6 @@ def get_mandelbrot(config, res):
 
     # append to result object if there is a res value; useful for using threading.Thread
     res.append(surf)
-    end_time = time.time()
-    print(f"Done rendering: took {round((end_time - start_time)*100)/100} seconds")
-    print(f"Bounds: width_min: {config.width_min}, width_max: {config.width_max}, height_min: {config.height_min}, height_max: {config.height_max}")
     
 def get_default_config():
     import os

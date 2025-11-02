@@ -4,7 +4,10 @@ from connection import get_mandelbrot, get_default_config, Config, init_gpu
 from dataclasses import dataclass
 from text_box import TextBox
 import numpy as np
-color_step = 0.03
+# disable high dpi support to render a higher quality image
+import os
+os.environ['SDL_VIDEO_HIGHDPI_DISABLED'] = '1'
+color_step = 0.0005
 @dataclass
 class Box:
     firstx: int
@@ -21,6 +24,7 @@ class Bounds:
 
 @dataclass
 class Context:
+    total_scroll: float
     SCREEN_DIM: int
     bounds: Bounds
     box: Box
@@ -44,7 +48,7 @@ class Context:
         self.running = True
         self.generating = False
         self.clock = pygame.time.Clock()
-
+        self.total_scroll = 1
         self.mandelbrot_thread = None
         self.res = []
         self.surf = generate_mandelbrot(self, do_in_thread=False)
@@ -60,31 +64,31 @@ def draw_selection_rectangle(context: Context):
     rect_h = abs(box.secondy - box.firsty)
     pygame.draw.rect(screen, (255,0,0), ((rect_x, rect_y, rect_w, rect_h)), 1)
 
-def update_screen_dim(context: Context):
-    box = context.box
-    bounds = context.bounds
-    lowest_x, highest_x = sorted((box.firstx, box.secondx))
-    # subtract by SCREEN_DIM since y is opposite between pygame and math
-    invert_firsty = context.screen_height - box.firsty
-    invert_secondy = context.screen_height - box.secondy
-    # Since subtracting changes which one is the lowest
-    lowest_y, highest_y = sorted((invert_firsty, invert_secondy))
-    mandelbrot_width = bounds.width_max - bounds.width_min
-    mandelbrot_height = bounds.height_max - bounds.height_min
-
-    # get the leftmost x value, and divide by SCREEN_DIM to normalize it between 0 and 1
-    # then multiply it by the real width to bring it into mandelbrot space, and add width_min to offset it to the screen
-    # similar logic for ones that follow
-    new_bounds = Bounds(0,0,0,0)
-    new_bounds.width_min = bounds.width_min + (lowest_x/context.screen_height * mandelbrot_width)
-    new_bounds.width_max = bounds.width_min + (highest_x/context.screen_height * mandelbrot_width)
-    new_bounds.height_min = bounds.height_min + (lowest_y/context.screen_height * mandelbrot_height)
-    new_bounds.height_max = bounds.height_min + (highest_y/context.screen_height * mandelbrot_height)
+def update_screen_dim(amount_scrolled: float, context: Context, mx, my) -> Bounds:
+    my = -my + context.SCREEN_DIM # flip y axis since pygame has 0,0 at top left
+    screen_x_factor = mx / context.SCREEN_DIM
+    screen_y_factor = my / context.SCREEN_DIM # find the amount the mouse is off from the top left corner of the screen
+    mandelbrot_x = context.bounds.width_min * (1 - screen_x_factor) + context.bounds.width_max * screen_x_factor # linear interpolate to get in mandelbrot coords
+    mandelbrot_y = context.bounds.height_min * (1 - screen_y_factor) + context.bounds.height_max * screen_y_factor
+    # we perform a dilation around the mandelbrot point the mouse is at
+    translated_bounds = Bounds(
+        context.bounds.width_min - mandelbrot_x,
+        context.bounds.width_max - mandelbrot_x,
+        context.bounds.height_min - mandelbrot_y,
+        context.bounds.height_max - mandelbrot_y)
+    zoom_factor = 1 + (amount_scrolled*0.025)
+    scaled_bounds = Bounds(translated_bounds.width_min * zoom_factor,
+                           translated_bounds.width_max * zoom_factor,
+                           translated_bounds.height_min * zoom_factor,
+                           translated_bounds.height_max * zoom_factor)
+    translated_back_bounds = Bounds(
+        scaled_bounds.width_min + mandelbrot_x,
+        scaled_bounds.width_max + mandelbrot_x,
+        scaled_bounds.height_min + mandelbrot_y,
+        scaled_bounds.height_max + mandelbrot_y)
     
-    new_bounds.width_min, new_bounds.width_max = sorted((new_bounds.width_min, new_bounds.width_max))
-    new_bounds.height_min, new_bounds.height_max = sorted((new_bounds.height_min, new_bounds.height_max))
 
-    return new_bounds
+    return translated_back_bounds
 
 def generate_mandelbrot(context, do_in_thread=True):
     res = context.res
@@ -98,9 +102,9 @@ def generate_mandelbrot(context, do_in_thread=True):
     config.HEIGHT = context.SCREEN_DIM
 
     # TODO: Make a config.json file to store these values instead of hardcoding them
-    config.MAX_ITER = 600
+    config.MAX_ITER = 300
     config.ANTI_ALIASING = 1
-    config.ANTI_ALIASING_NUM_PTS = 100
+    config.ANTI_ALIASING_NUM_PTS = 2
     config.COLOR_STEP_MULTIPLIER = color_step
     config.COLOR_OFFSET = 0
     config.ITERATION_CHECK = 1
@@ -128,42 +132,20 @@ def main_loop():
         context.textbox.draw(context.surf, context.font)
         for event in pygame.event.get():
             # check if mouse is inside text box, some things dont apply if it is
-            is_within = context.textbox.is_within(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
             context.textbox.handle_event(event)
             if event.type == pygame.QUIT:
                 context.running = False
-
-            # If the user does an action with the left click and there is nothing on the thread generating
-            if getattr(event, 'button', None):
-                if event.button == 1 and not context.mandelbrot_thread and not is_within:
-                    # If the user clicks once
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        # This is the first corner the user chose as part of the new view
-                        context.box.firstx, context.box.firsty = pygame.mouse.get_pos()
-                
-                    # If the user releases the mouse
-                    elif event.type == pygame.MOUSEBUTTONUP:
-                        # first, let's update some important globals for generating our new mandelbrot
-                        context.bounds = update_screen_dim(context)
-                        # Attempt to get the text from the text box and convert it to an int, if it fails just ignore it
-                        try:
-                            new_dim = float(context.textbox.get_text())
-                            if new_dim > 0:
-                                global color_step
-                                color_step = new_dim
-                        except:
-                            print("failed to convert userinput to float, ignoring")
-                        context.mandelbrot_thread = generate_mandelbrot(context, do_in_thread=True)
-    
-        # While the user keeps pressing the mouse
-        if pygame.mouse.get_pressed()[0] and not context.mandelbrot_thread and not is_within:
-            # This is the other corner the user chooses when they hold the mouse, make it so that only the x can control how big it is so that the user doesn't select a nonsquare
-            context.box.secondx, context.box.secondy = pygame.mouse.get_pos()
-            diff = abs(context.box.secondx - context.box.firstx)
-            context.box.secondy = context.box.firsty + diff
-
-            # Draw a rect to show exactly where their new view will end up
-            draw_selection_rectangle(context)
+            if event.type == pygame.MOUSEWHEEL and not context.mandelbrot_thread:
+                context.bounds = update_screen_dim(event.y, context, *pygame.mouse.get_pos())
+                # Attempt to get the text from the text box and convert it to an int, if it fails just ignore it
+                try:
+                    new_dim = float(context.textbox.get_text())
+                    if new_dim > 0:
+                        global color_step
+                        color_step = new_dim
+                except:
+                    pass
+                context.mandelbrot_thread = generate_mandelbrot(context, do_in_thread=True)
         context.clock.tick(60)
         pygame.display.flip()
 if __name__ == "__main__":

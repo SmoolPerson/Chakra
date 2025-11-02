@@ -3,7 +3,8 @@
 #include <simd/simd.h>
 #include "gpu_bridge.hpp"
 #include "../C/cfstruct.hpp"
-
+#include <chrono>
+#include <iostream>
 // global variables representing the gpu
 id<MTLDevice> device;
 id<MTLComputePipelineState> pipeline;
@@ -78,7 +79,6 @@ unsigned char *fill_rgb_gpu(Config *config, bool logging) {
         MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
         [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
         [encoder endEncoding];
-
         [cmdBuf commit];
         [cmdBuf waitUntilCompleted];
 
